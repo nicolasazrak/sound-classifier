@@ -1,0 +1,27 @@
+<html>
+<head>
+    <title>Recorder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/reset.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="main">
+        <h1>Recorder</h1>
+        <div id='button-container'>
+            <button onclick="save()">Guardar con 30 segundos</button>
+        </div>
+        <div id="result">Resultado...</div>
+    </div>
+    
+
+<script>
+        async function save() {
+            const response = await fetch("/save", {
+                method: 'POST', // *GET, POST, PUT, DELETE, etc.
+            });
+            document.getElementById("result").innerHTML = await response.text();
+        }
+    </script>
+</body>
+</html>

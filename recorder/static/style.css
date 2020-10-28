@@ -1,0 +1,26 @@
+h1 {
+  font-size: 2em;
+  font-family: sans-serif;
+  margin: 1em;
+  text-align: center;
+}
+
+#button-container {
+  width: 40%;
+  margin: 3em auto;
+}
+
+button {
+  width: 100%;
+  text-align: center;
+}
+
+#result {
+  magin: 1em;
+  text-align: center;
+}
+
+.main {
+  width: 80%;
+  margin: auto;
+}
