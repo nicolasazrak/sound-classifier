@@ -5,12 +5,7 @@ import threading
 import sys
 import time
 import os.path
-try:
-    print("Loading librosa")
-    import librosa
-    import librosa.display
-finally:
-    print("Loaded!")
+from flask import Flask, render_template
 
 
 class Recorder:
@@ -96,3 +91,25 @@ if __name__ == "__main__":
     finally:
         print("Stopping")
         recorder.stop()
+
+
+app = Flask(__name__)
+
+recorder = Recorder()
+threading.Thread(target=recorder.start).start()
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/save', methods=["POST"])
+def save():
+    return recorder.save_buffer()
+
+
+try:
+    app.run(debug=True, host='0.0.0.0')
+finally:
+    recorder.stop()
