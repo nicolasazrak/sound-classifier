@@ -1,0 +1,28 @@
+.main {
+  width: 700px;
+  margin: auto;
+}
+
+.recording {
+  border: 0.1em solid black;
+  margin: 2em;
+}
+
+.title {
+  padding: 0.5em;
+  font-weight: bolder;
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 1.5em;
+}
+
+.actions {
+  text-align: right;
+  padding: 0.5em;
+}
+
+img {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}

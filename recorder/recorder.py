@@ -25,7 +25,7 @@ class Recorder:
 
     def save_buffer(self):
         output_name = os.path.join(
-            "recordings", "output-" + str(time.time()) + ".wav")
+            "recordings", "raw", "output-" + str(time.time()) + ".wav")
         wf = wave.open(output_name, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.p.get_sample_size(self.FORMAT))
@@ -101,7 +101,7 @@ threading.Thread(target=recorder.start).start()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('recorder.html')
 
 
 @app.route('/save', methods=["POST"])

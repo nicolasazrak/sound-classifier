@@ -1,0 +1,73 @@
+<html>
+<head>
+    <title>Cropper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/reset.css">
+    <link rel="stylesheet" href="/static/cropper.css">
+</head>
+<body>
+    <div class="main">
+        {% for recording in recordings %}
+            <div class="recording">
+                <div class="title">
+                    {{ recording }}
+                </div>
+                <img src="/static/recordings/raw/{{ recording }}.png" alt="audio" onclick="play(event, '{{recording}}')" />
+                <div class="actions">
+                    <span></span>
+                    <button onclick="crop(event, '{{ recording }}', 'clean')">Cortar 2s (audio limpio)</button>
+                    <button onclick="crop(event, '{{ recording }}', 'noisy')">Cortar 2s (audio con ruido)</button>
+                    <button>Borrar</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <script>
+        var audiosCache = {};
+        var audiosPosition = {};
+        var currentAudio;
+        var stopTimer;
+
+        function crop(event, recording, type) {
+            fetch('/crop', {
+                method: 'post',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type,
+                    recording,
+                    position: audiosPosition[recording]
+                })
+            }).catch(console.alert);
+        }
+
+        function play(event, recording) {
+            var rect = event.target.getBoundingClientRect();
+            var x = event.clientX - rect.left; //x position within the element.
+            var width = rect.width;
+            var percentage = x / width;
+
+            if (currentAudio != null) {
+                currentAudio.pause();
+            }
+            if (stopTimer) {
+                clearTimeout(stopTimer);
+            }
+            
+            if (audiosCache[recording] == null) {
+                audiosCache[recording] = new Audio("/static/recordings/raw/" + recording);
+            }
+
+            currentAudio = audiosCache[recording];
+            currentAudio.play().then(function() {
+                currentAudio.currentTime = currentAudio.duration * percentage;
+                audiosPosition[recording] = currentAudio.currentTime;
+                stopTimer = setTimeout(() => audiosCache[recording].pause(), 2000);
+            }).catch(function(){
+                console.error("Audio error");
+            });
+        }
+    </script>
+</body>
+</html>
