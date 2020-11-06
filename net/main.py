@@ -3,6 +3,7 @@ import numpy as np
 import os.path
 from dataset import make_datasets
 from keras import *
+from kapre import *
 from keras.layers import *
 from log_mel_spectogram import LogMelSpectrogram
 from keras.callbacks import ModelCheckpoint
@@ -14,23 +15,34 @@ def build_rnn_model(sample_rate, duration, fft_size, hop_size, n_mels):
 
     X_input = tf.keras.Input(shape=(n_samples,))
 
-    X = LogMelSpectrogram(sample_rate, fft_size, hop_size, n_mels, expand_channels=False)(X_input)
+    X = Lambda(lambda x: tf.expand_dims(x, axis=-1))(X_input)
+    X = STFT(n_fft=n_mels, win_length=fft_size, hop_length=hop_size,
+             window_name=None, pad_end=False,
+             input_data_format='channels_last', output_data_format='channels_last')(X)
+
+    X = Magnitude()(X)
+    X = MagnitudeToDecibel()(X)
+    # X = LogmelToMFCC()(X)
+    X = Lambda(lambda x: tf.squeeze(x, axis=-1))(X)
+    # X = LogMelSpectrogram(sample_rate, fft_size, hop_size, n_mels, expand_channels=False)(X_input)
     X = BatchNormalization()(X)
 
     X = Conv1D(filters=128, kernel_size=3, strides=1)(X)
     X = Conv1D(filters=192, kernel_size=3, strides=1)(X)
     X = BatchNormalization()(X)
-    # X = Activation("relu")(X)
-    X = Dropout(rate=0.5)(X)
 
-    X = GRU(units=196, return_sequences=True)(X)
-    X = Dropout(rate=0.5)(X)
+    X = Activation("relu")(X)
+    X = Dropout(rate=0.2)(X)
+
+    X = GRU(units=256, return_sequences=True)(X)
+    X = Dropout(rate=0.2)(X)
     X = BatchNormalization()(X)
 
-    X = GRU(units=196, return_sequences=False)(X)
-    X = Dropout(rate=0.5)(X)
+    X = GRU(units=256, return_sequences=False)(X)
+    X = Dropout(rate=0.2)(X)
     X = BatchNormalization()(X)
 
+    # X = Dense(10)(X)
     X = Dense(1)(X)
 
     model = Model(inputs=X_input, outputs=X)
