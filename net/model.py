@@ -31,22 +31,16 @@ def build_rnn_model(sample_rate, duration, fft_size, hop_size, n_mels):
     # X = LogMelSpectrogram(sample_rate, fft_size, hop_size, n_mels, expand_channels=False)(X_input)
     X = BatchNormalization()(X)
 
-    X = Conv1D(filters=128, kernel_size=3, strides=1)(X)
-    X = MaxPooling1D()(X)
+    X = Conv1D(filters=64, kernel_size=8, strides=4)(X)
     X = BatchNormalization()(X)
 
     X = Activation("relu")(X)
     X = Dropout(rate=0.4)(X)
 
-    X = GRU(units=256, return_sequences=True)(X)
+    X = GRU(units=128, return_sequences=False)(X)
     X = Dropout(rate=0.4)(X)
     X = BatchNormalization()(X)
 
-    X = GRU(units=256, return_sequences=False)(X)
-    X = Dropout(rate=0.4)(X)
-    X = BatchNormalization()(X)
-
-    X = Dense(10)(X)
     X = Dense(1, activation='sigmoid')(X)
 
     model = Model(inputs=X_input, outputs=X)
@@ -57,9 +51,17 @@ def build_rnn_model(sample_rate, duration, fft_size, hop_size, n_mels):
 model = build_rnn_model(
     sample_rate=22050,
     duration=2,
-    fft_size=1024,
+    fft_size=512,
     hop_size=256,
-    n_mels=512
+    n_mels=256
 )
+
+model.compile(optimizer="adam", loss="binary_crossentropy", metrics=[
+    'binary_accuracy',
+    TruePositives(),
+    TrueNegatives(),
+    FalsePositives(),
+    FalseNegatives(),
+])
 
 model.load_weights("model.hdf5")

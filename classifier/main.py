@@ -74,10 +74,12 @@ def main():
             time.sleep(2)
             start = time.time()
 
+            start_pop = time.time()
             frames = q.pop()
             temp_file_name = os.path.join("tmp", "tmp-" + str(time.time()) + ".wav")
             predicted = 0
             try:
+                start_io = time.time()
                 wf = wave.open(temp_file_name, 'wb')
                 wf.setnchannels(recorder.CHANNELS)
                 wf.setsampwidth(recorder.p.get_sample_size(recorder.FORMAT))
@@ -87,7 +89,10 @@ def main():
 
                 binary = tf.io.read_file(temp_file_name)
                 decoded, _ = tf.audio.decode_wav(binary, desired_channels=1, desired_samples=44100)
-                predicted = model.predict(np.array([decoded]))[0][0]
+                decoded = tf.expand_dims(decoded, axis=0)
+
+                start_predict = time.time()
+                predicted = model(decoded)[0][0]
                 print(f"Predicted {predicted}. Took: {time.time() - start} seconds")
 
             finally:

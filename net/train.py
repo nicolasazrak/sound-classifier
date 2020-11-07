@@ -19,15 +19,8 @@ train_dataset, test_dataset = make_datasets()
 model.summary()
 
 # model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['binary_accuracy'])
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=[
-    'binary_accuracy',
-    TruePositives(),
-    TrueNegatives(),
-    FalsePositives(),
-    FalseNegatives(),
-])
 
-model.fit(x=train_dataset, validation_data=test_dataset, epochs=100, callbacks=[checkpoint])
+model.fit(x=train_dataset, validation_data=test_dataset, epochs=10, callbacks=[checkpoint])
 
 #loss = model.evaluate(x_test,  y_test, verbose=2)
 # print("Restored model, accuracy: {:5.2f}%".format(100*acc))
