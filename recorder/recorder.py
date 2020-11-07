@@ -25,7 +25,7 @@ class Recorder:
 
     def save_buffer(self):
         output_name = os.path.join(
-            "recordings", "raw", "output-" + str(time.time()) + ".wav")
+            "training-data", "raw", "output-" + str(time.time()) + ".wav")
         wf = wave.open(output_name, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.p.get_sample_size(self.FORMAT))
