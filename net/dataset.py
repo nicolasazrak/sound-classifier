@@ -1,7 +1,7 @@
 from glob import glob
 from math import floor
 import tensorflow as tf
-from random import shuffle
+from random import Random
 
 
 def load_audio(file_path):
@@ -18,7 +18,7 @@ def to_label(file_path):
 
 def make_datasets():
     filenames = glob("training-data/*/*.wav")
-    shuffle(filenames)
+    Random(1).shuffle(filenames)
 
     split_idx = floor(len(filenames) * 0.8)
 
