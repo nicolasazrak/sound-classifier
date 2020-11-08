@@ -46,15 +46,14 @@ def build_complex_rnn_model(use_kapre, sample_rate, n_mels, fft_size, hop_size):
 
     X = Dense(1, activation='sigmoid')(X)
 
-    model = Model(inputs=X_input, outputs=X)
-
-    return model
+    return Model(inputs=X_input, outputs=X)
 
 
 def build_lite_rnn_model():
     X_input = tf.keras.Input(shape=(87, 128,))
 
-    X = Conv1D(filters=64, kernel_size=8, strides=4)(X_input)
+    X = BatchNormalization()(X_input)
+    X = Conv1D(filters=64, kernel_size=8, strides=4)(X)
     X = BatchNormalization()(X)
 
     X = Activation("relu")(X)
@@ -66,9 +65,7 @@ def build_lite_rnn_model():
 
     X = Dense(1, activation='sigmoid')(X)
 
-    model = Model(inputs=X_input, outputs=X)
-
-    return model
+    return Model(inputs=X_input, outputs=X)
 
 
 model = build_lite_rnn_model()

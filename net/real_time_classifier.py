@@ -12,34 +12,30 @@ import tempfile
 import os.path
 import tflite_runtime.interpreter as tflite
 from flask import Flask, render_template
+import io
 
 
-interpreter = tflite.Interpreter(model_path="model.tflite")
-interpreter.allocate_tensors()
+class Predictor:
 
-# Get input and output tensors.
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
+    def __init__(self):
+        self.interpreter = tflite.Interpreter(model_path="model.tflite")
+        self.interpreter.allocate_tensors()
 
-input_shape = input_details[0]['shape']
+        # Get input and output tensors.
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
 
+        self.input_shape = self.input_details[0]['shape']
 
-def predict(samples):
-    samples = np.expand_dims(samples, axis=0).astype(np.float32)
-    interpreter.set_tensor(input_details[0]['index'], samples)
+    def predict(self, samples):
+        samples = np.expand_dims(samples, axis=0).astype(np.float32)
+        self.interpreter.set_tensor(self.input_details[0]['index'], samples)
 
-    interpreter.invoke()
+        self.interpreter.invoke()
 
-    # The function `get_tensor()` returns a copy of the tensor data.
-    # Use `tensor()` in order to get a pointer to the tensor.
-    return interpreter.get_tensor(output_details[0]['index'])[0][0]
-
-
-def get_all_queue_result(queue):
-    result_list = []
-    while not queue.empty():
-        result_list.append(queue.get())
-    return result_list
+        # The function `get_tensor()` returns a copy of the tensor data.
+        # Use `tensor()` in order to get a pointer to the tensor.
+        return self.interpreter.get_tensor(self.output_details[0]['index'])[0][0]
 
 
 class Recorder:
@@ -85,44 +81,50 @@ class Recorder:
         self.stop_lock.acquire()
 
 
-def load_audio(file_path):
+def load_audio(file):
     padded = np.zeros((44100,))
-    y, sr = librosa.load(file_path, sr=22050, duration=2)
+    y, sr = librosa.load(file, sr=22050, duration=2)
     padded[:y.shape[0]] = y[:]
     spect = librosa.feature.melspectrogram(y=padded, sr=sr)
     swapped = np.swapaxes(spect, 0, 1)
     return swapped
 
 
+def pop_audio(q, recorder):
+    frames = q.pop()
+    f = io.BytesIO()
+    wf = wave.open(f, 'wb')
+    wf.setnchannels(recorder.CHANNELS)
+    wf.setsampwidth(recorder.p.get_sample_size(recorder.FORMAT))
+    wf.setframerate(recorder.RATE)
+    wf.writeframes(b''.join(frames))
+    wf.close()
+
+    f.seek(0)
+    return f
+
+
 def main():
     q = deque([], 1)
     recorder = Recorder(q)
     threading.Thread(target=recorder.start).start()
+    predictor = Predictor()
 
     time.sleep(1)
     try:
         while True:
             time.sleep(2)
             start = time.time()
-            frames = q.pop()
-
-            temp_file_name = os.path.join("tmp", "tmp-" + str(time.time()) + ".wav")
             predicted = 0
-            try:
-                wf = wave.open(temp_file_name, 'wb')
-                wf.setnchannels(recorder.CHANNELS)
-                wf.setsampwidth(recorder.p.get_sample_size(recorder.FORMAT))
-                wf.setframerate(recorder.RATE)
-                wf.writeframes(b''.join(frames))
-                wf.close()
-
-                loaded_audio = load_audio(temp_file_name)
-                predicted = predict(loaded_audio)
-                print(f"Predicted {predicted}. Took: {time.time() - start} seconds")
-
-            finally:
-                if predicted < 0.5:
-                    os.remove(temp_file_name)
+            f = pop_audio(q, recorder)
+            loaded_audio = load_audio(f)
+            predicted = predictor.predict(loaded_audio)
+            print(f"Predicted {predicted}. Took: {time.time() - start} seconds")
+            if predicted > 0.5:
+                temp_file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + ".wav")
+                with open(temp_file_name, "wb") as outfile:
+                    f.seek(0)
+                    outfile.write(f.getbuffer())
 
     except:
         print("Stopping")

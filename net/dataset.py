@@ -22,7 +22,10 @@ def to_label(file_path):
 
 
 def make_datasets():
-    filenames = glob("training-data/*/*.wav")
+    filenames = []
+    filenames.extend(glob("training-data/background/*.wav"))
+    filenames.extend(glob("training-data/positive-noisy/*.wav"))
+    filenames.extend(glob("training-data/positive-clean/*.wav"))
     Random(1).shuffle(filenames)
 
     split_idx = floor(len(filenames) * 0.8)
