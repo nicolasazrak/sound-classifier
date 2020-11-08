@@ -4,13 +4,35 @@ import threading
 import sys
 import time
 import numpy as np
+import librosa
 from collections import deque
+import numpy as np
 import multiprocessing as mp
 import tempfile
 import os.path
-import tensorflow as tf
-from net.model import model
+import tflite_runtime.interpreter as tflite
 from flask import Flask, render_template
+
+
+interpreter = tflite.Interpreter(model_path="model.tflite")
+interpreter.allocate_tensors()
+
+# Get input and output tensors.
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+input_shape = input_details[0]['shape']
+
+
+def predict(samples):
+    samples = np.expand_dims(samples, axis=0).astype(np.float32)
+    interpreter.set_tensor(input_details[0]['index'], samples)
+
+    interpreter.invoke()
+
+    # The function `get_tensor()` returns a copy of the tensor data.
+    # Use `tensor()` in order to get a pointer to the tensor.
+    return interpreter.get_tensor(output_details[0]['index'])[0][0]
 
 
 def get_all_queue_result(queue):
@@ -63,6 +85,15 @@ class Recorder:
         self.stop_lock.acquire()
 
 
+def load_audio(file_path):
+    padded = np.zeros((44100,))
+    y, sr = librosa.load(file_path, sr=22050, duration=2)
+    padded[:y.shape[0]] = y[:]
+    spect = librosa.feature.melspectrogram(y=padded, sr=sr)
+    swapped = np.swapaxes(spect, 0, 1)
+    return swapped
+
+
 def main():
     q = deque([], 1)
     recorder = Recorder(q)
@@ -73,13 +104,11 @@ def main():
         while True:
             time.sleep(2)
             start = time.time()
-
-            start_pop = time.time()
             frames = q.pop()
+
             temp_file_name = os.path.join("tmp", "tmp-" + str(time.time()) + ".wav")
             predicted = 0
             try:
-                start_io = time.time()
                 wf = wave.open(temp_file_name, 'wb')
                 wf.setnchannels(recorder.CHANNELS)
                 wf.setsampwidth(recorder.p.get_sample_size(recorder.FORMAT))
@@ -87,12 +116,8 @@ def main():
                 wf.writeframes(b''.join(frames))
                 wf.close()
 
-                binary = tf.io.read_file(temp_file_name)
-                decoded, _ = tf.audio.decode_wav(binary, desired_channels=1, desired_samples=44100)
-                decoded = tf.expand_dims(decoded, axis=0)
-
-                start_predict = time.time()
-                predicted = model(decoded)[0][0]
+                loaded_audio = load_audio(temp_file_name)
+                predicted = predict(loaded_audio)
                 print(f"Predicted {predicted}. Took: {time.time() - start} seconds")
 
             finally:
@@ -103,3 +128,6 @@ def main():
         print("Stopping")
         recorder.stop()
         raise
+
+
+main()

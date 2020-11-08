@@ -12,15 +12,18 @@ from keras.callbacks import ModelCheckpoint
 from kapre import STFT, Magnitude, MagnitudeToDecibel
 
 
-checkpoint = ModelCheckpoint("model.hdf5", monitor='loss', verbose=1, save_weights_only=True, save_best_only=True, mode='auto')
+# checkpoint = ModelCheckpoint("model.hdf5", monitor='loss', verbose=1, save_weights_only=True, save_best_only=True, mode='auto')
 
 train_dataset, test_dataset = make_datasets()
 
 model.summary()
 
-# model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['binary_accuracy'])
+model.fit(x=train_dataset, validation_data=test_dataset, epochs=50, callbacks=[])
 
-model.fit(x=train_dataset, validation_data=test_dataset, epochs=10, callbacks=[checkpoint])
+# Save the model in lite format.
+converter = tf.lite.TFLiteConverter.from_keras_model(model)
+tflite_model = converter.convert()
 
-#loss = model.evaluate(x_test,  y_test, verbose=2)
-# print("Restored model, accuracy: {:5.2f}%".format(100*acc))
+# Save the model.
+with open('model.tflite', 'wb') as f:
+    f.write(tflite_model)
