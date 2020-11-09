@@ -11,44 +11,6 @@ from keras.callbacks import ModelCheckpoint
 from kapre import STFT, Magnitude, MagnitudeToDecibel
 
 
-def build_complex_rnn_model(use_kapre, sample_rate, n_mels, fft_size, hop_size):
-    X_input = tf.keras.Input(shape=(44100,))
-    X = None
-
-    if use_kapre:
-        X = Lambda(lambda x: tf.expand_dims(x, axis=-1))(X_input)
-        X = STFT(
-            n_fft=n_mels,
-            win_length=fft_size,
-            hop_length=hop_size,
-            window_name=None,
-            pad_end=False,
-            input_data_format='channels_last',
-            output_data_format='channels_last'
-        )(X)
-        X = Magnitude()(X)
-        X = MagnitudeToDecibel()(X)
-        X = Lambda(lambda x: tf.squeeze(x, axis=-1))(X)
-    else:
-        X = LogMelSpectrogram(sample_rate, fft_size, hop_size, n_mels, expand_channels=False)(X_input)
-
-    X = BatchNormalization()(X)
-
-    X = Conv1D(filters=64, kernel_size=8, strides=4)(X)
-    X = BatchNormalization()(X)
-
-    X = Activation("relu")(X)
-    X = Dropout(rate=0.7)(X)
-
-    X = GRU(units=128, return_sequences=False)(X)
-    X = Dropout(rate=0.7)(X)
-    X = BatchNormalization()(X)
-
-    X = Dense(1, activation='sigmoid')(X)
-
-    return Model(inputs=X_input, outputs=X)
-
-
 def build_lite_rnn_model():
     X_input = tf.keras.Input(shape=(87, 128,))
 
@@ -63,14 +25,24 @@ def build_lite_rnn_model():
     X = Dropout(rate=0.7)(X)
     X = BatchNormalization()(X)
 
-    X = Dense(1, activation='sigmoid')(X)
+    X = Dense(10, kernel_regularizer='l2')(X)
+    X = Dense(1, activation='sigmoid', kernel_regularizer='l2')(X)
 
     return Model(inputs=X_input, outputs=X)
 
 
 model = build_lite_rnn_model()
 
-model.compile(optimizer="adam", loss="binary_crossentropy", metrics=[
+lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate=1e-2,
+    decay_steps=150,
+    decay_rate=0.9,
+    staircase=True,
+)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+
+model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=[
     'binary_accuracy',
     TruePositives(),
     TrueNegatives(),
@@ -78,14 +50,11 @@ model.compile(optimizer="adam", loss="binary_crossentropy", metrics=[
     FalseNegatives(),
 ])
 
-
-# checkpoint = ModelCheckpoint("model.hdf5", monitor='loss', verbose=1, save_weights_only=True, save_best_only=True, mode='auto')
-
 train_dataset, test_dataset = make_datasets()
 
 model.summary()
 
-model.fit(x=train_dataset, validation_data=test_dataset, epochs=50, callbacks=[])
+model.fit(x=train_dataset, validation_data=test_dataset, epochs=200, callbacks=[])
 
 # Save the model in lite format.
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
