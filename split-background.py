@@ -1,13 +1,5 @@
 import os
-
-
-def get_raw_recordings():
-    recordings = []
-    for file in os.listdir("training-data/raw/"):
-        if file.endswith(".wav"):
-            recordings.append(file)
-    recordings.sort()
-    return recordings
+from utils import get_raw_recordings
 
 
 def generate_background():

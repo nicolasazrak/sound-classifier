@@ -2,14 +2,12 @@ import io
 import pyaudio
 import wave
 import threading
-import sys
 import time
 import numpy as np
 import librosa
-import numpy as np
-import tempfile
 import os.path
 from collections import deque
+from dataset import load_audio
 import tflite_runtime.interpreter as tflite
 
 
@@ -77,15 +75,6 @@ class Recorder:
     def stop(self):
         self.should_stop = True
         self.stop_lock.acquire()
-
-
-def load_audio(file):
-    padded = np.zeros((44100,))
-    y, sr = librosa.load(file, sr=22050, duration=2)
-    padded[:y.shape[0]] = y[:]
-    spect = librosa.feature.melspectrogram(y=padded, sr=sr)
-    swapped = np.swapaxes(spect, 0, 1)
-    return swapped
 
 
 def pop_audio(q, recorder):

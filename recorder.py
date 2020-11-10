@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import pyaudio
 import wave
 import threading
@@ -24,8 +23,7 @@ class Recorder:
         self.RECORD_SECONDS = 30
 
     def save_buffer(self):
-        output_name = os.path.join(
-            "training-data", "raw", "output-" + str(time.time()) + ".wav")
+        output_name = os.path.join("training-data", "raw", "output-" + str(time.time()) + ".wav")
         wf = wave.open(output_name, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.p.get_sample_size(self.FORMAT))
