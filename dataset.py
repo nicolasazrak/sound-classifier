@@ -22,18 +22,18 @@ def make_datasets():
     filenames.extend(glob("training-data/background/*.wav"))
     filenames.extend(glob("training-data/positive-noisy/*.wav"))
     filenames.extend(glob("training-data/positive-clean/*.wav"))
-    Random(2).shuffle(filenames)
+    Random(4).shuffle(filenames)
 
     split_idx = floor(len(filenames) * 0.8)
 
     train_filenames = filenames[:split_idx]
     train_audios = tf.data.Dataset.from_tensor_slices(list(map(load_tensor_audio, train_filenames)))
     train_labels = tf.data.Dataset.from_tensor_slices(list(map(to_label, train_filenames)))
-    train_dataset = tf.data.Dataset.zip((train_audios, train_labels)).batch(32)
+    train_dataset = tf.data.Dataset.zip((train_audios, train_labels)).batch(64)
 
     test_filenames = filenames[split_idx:]
     test_audios = tf.data.Dataset.from_tensor_slices(list(map(load_tensor_audio, test_filenames)))
     test_labels = tf.data.Dataset.from_tensor_slices(list(map(to_label, test_filenames)))
-    test_dataset = tf.data.Dataset.zip((test_audios, test_labels)).batch(32)
+    test_dataset = tf.data.Dataset.zip((test_audios, test_labels)).batch(64)
 
     return train_dataset, test_dataset
