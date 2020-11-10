@@ -6,9 +6,7 @@ from keras import *
 from kapre import *
 from keras.layers import *
 from keras.metrics import *
-from log_mel_spectogram import LogMelSpectrogram
 from keras.callbacks import ModelCheckpoint
-from kapre import STFT, Magnitude, MagnitudeToDecibel
 
 
 def build_lite_rnn_model():
@@ -35,26 +33,22 @@ model = build_lite_rnn_model()
 
 lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate=1e-2,
-    decay_steps=150,
-    decay_rate=0.9,
-    staircase=True,
+    decay_steps=200,
+    decay_rate=0.95,
 )
 
 optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 model.compile(optimizer=optimizer, loss="binary_crossentropy", metrics=[
     'binary_accuracy',
-    TruePositives(),
-    TrueNegatives(),
-    FalsePositives(),
-    FalseNegatives(),
+    Precision(),
+    Recall(),
 ])
 
 train_dataset, test_dataset = make_datasets()
 
 model.summary()
-
-model.fit(x=train_dataset, validation_data=test_dataset, epochs=200, callbacks=[])
+model.fit(x=train_dataset, validation_data=test_dataset, epochs=100, callbacks=[])
 
 # Save the model in lite format.
 converter = tf.lite.TFLiteConverter.from_keras_model(model)

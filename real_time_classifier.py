@@ -1,3 +1,4 @@
+import io
 import pyaudio
 import wave
 import threading
@@ -5,14 +6,11 @@ import sys
 import time
 import numpy as np
 import librosa
-from collections import deque
 import numpy as np
-import multiprocessing as mp
 import tempfile
 import os.path
+from collections import deque
 import tflite_runtime.interpreter as tflite
-from flask import Flask, render_template
-import io
 
 
 class Predictor:

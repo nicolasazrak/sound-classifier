@@ -26,7 +26,7 @@ def make_datasets():
     filenames.extend(glob("training-data/background/*.wav"))
     filenames.extend(glob("training-data/positive-noisy/*.wav"))
     filenames.extend(glob("training-data/positive-clean/*.wav"))
-    Random(1).shuffle(filenames)
+    Random(2).shuffle(filenames)
 
     split_idx = floor(len(filenames) * 0.8)
 
