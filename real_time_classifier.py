@@ -7,7 +7,7 @@ import numpy as np
 import librosa
 import os.path
 from collections import deque
-from dataset import load_audio
+from utils import load_audio
 import tflite_runtime.interpreter as tflite
 
 

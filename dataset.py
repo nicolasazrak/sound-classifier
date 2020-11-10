@@ -1,18 +1,10 @@
-from glob import glob
-from math import floor
 import librosa
 import numpy as np
 import tensorflow as tf
+from glob import glob
+from math import floor
 from random import Random
-
-
-def load_audio(file_or_path):
-    padded = np.zeros((44100,))
-    y, sr = librosa.load(file_or_path, sr=22050, duration=2)
-    padded[:y.shape[0]] = y[:]
-    spect = librosa.feature.melspectrogram(y=padded, sr=sr)
-    swapped = np.swapaxes(spect, 0, 1)
-    return swapped
+from utils import load_audio
 
 
 def load_tensor_audio(file_or_path):

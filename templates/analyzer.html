@@ -1,39 +1,49 @@
 <html>
 <head>
-    <title>Cropper</title>
+    <title>Analyzer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/reset.css">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    
     <div class="main">
         {% for recording in recordings %}
             <div class="recording">
                 <div class="title">
                     {{ recording }}
                 </div>
-                <img src="/static/training-data/raw/{{ recording }}.png" alt="audio" onclick="play(event, 'raw/{{recording}}')" />
+                <img src="/static/training-data/recognized/{{ recording }}.png" alt="audio" onclick="play(event, 'recognized/{{recording}}')" />
                 <div class="actions">
                     <span></span>
-                    <button onclick="crop(event, '{{ recording }}', 'clean')">Cortar 2s (audio limpio)</button>
-                    <button onclick="crop(event, '{{ recording }}', 'noisy')">Cortar 2s (audio con ruido)</button>
+                    <button onclick="confirm(event, '{{ recording }}', 'background')">Mark as background</button>
+                    <button onclick="confirm(event, '{{ recording }}', 'positive-clean')">Confirm clean sound</button>
+                    <button onclick="confirm(event, '{{ recording }}', 'positive-noisy')">Confirm noisy sound</button>
                     <button>Borrar</button>
                 </div>
             </div>
         {% endfor %}
     </div>
+
     <script src="/static/common.js"></script>
+
     <script>
-        function crop(event, recording, type) {
-            fetch('/crop', {
+        function confirm(event, recording, type) {
+            console.log(recording, type);
+            const parentRecording = event.target.closest(".recording");
+            parentRecording.classList.add('disapear');
+            setTimeout(() => {
+                parentRecording.remove();
+            }, 500);
+
+            fetch('/confirm', {
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     type,
-                    recording,
-                    position: audiosPosition[recording]
+                    recording
                 })
             }).catch(console.alert);
         }
