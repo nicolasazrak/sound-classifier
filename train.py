@@ -19,7 +19,7 @@ def build_lite_rnn_model():
     X = Activation("relu")(X)
     X = Dropout(rate=0.7)(X)
 
-    X = GRU(units=16, return_sequences=False)(X)
+    X = GRU(units=64, return_sequences=False, bias_regularizer='l2')(X)
     X = Dropout(rate=0.7)(X)
     X = BatchNormalization()(X)
 
