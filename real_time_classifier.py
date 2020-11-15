@@ -92,12 +92,14 @@ def pop_audio(q, recorder):
 
 
 def main():
+    print("main()")
     q = deque([], 1)
     recorder = Recorder(q)
     threading.Thread(target=recorder.start).start()
     predictor = Predictor()
 
     time.sleep(1)
+    print("Starting!")
     try:
         while True:
             time.sleep(2)
@@ -106,8 +108,8 @@ def main():
             f = pop_audio(q, recorder)
             loaded_audio = load_audio(f)
             predicted = predictor.predict(loaded_audio)
-            print(f"Predicted {predicted}. Took: {time.time() - start} seconds")
             if predicted > 0.5:
+                print(f"Predicted {predicted}. Took: {time.time() - start} seconds. Saving!")
                 temp_file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + ".wav")
                 with open(temp_file_name, "wb") as outfile:
                     f.seek(0)
