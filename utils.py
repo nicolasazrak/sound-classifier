@@ -11,6 +11,13 @@ def get_recognized_recordings():
     return get_recordings('recognized')
 
 
+def get_positive():
+    positive = []
+    positive.extend(get_recordings('positive-clean'))
+    positive.extend(get_recordings('positive-noisy'))
+    return positive
+
+
 def get_recordings(from_type):
     recordings = []
     for file in os.listdir(os.path.join("training-data", from_type)):
