@@ -53,11 +53,11 @@ def main():
     recorder = Recorder(record_seconds=2)
     threading.Thread(target=recorder.start).start()
     predictor = Predictor()
-    time.sleep(1)
+    time.sleep(1)  # Improve this !
     print("Starting!")
     try:
         while True:
-            time.sleep(2)
+            time.sleep(2)  # Yes, this sucks!
             start = time.time()
             predicted = 0
             f = pop_audio(recorder)

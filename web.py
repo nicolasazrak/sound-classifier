@@ -7,7 +7,7 @@ import random
 import itertools
 import threading
 from recorder import Recorder
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from utils import get_recognized_recordings, generate_thumbs, get_positive, get_raw_recordings
 
 
@@ -15,13 +15,13 @@ app = Flask(__name__)
 
 
 @app.route('/analyze')
-def analyze():
+def view_analyze_page():
     generate_thumbs()
     return render_template('analyzer.html', recordings=get_recognized_recordings())
 
 
 @app.route('/report')
-def report():
+def view_report_page():
     positive = get_positive()
     positive = map(lambda r: r.split("-")[1].split(".wav")[0], positive)
     positive = map(lambda r: time.gmtime(float(r)), positive)
@@ -36,7 +36,7 @@ def report():
         grouped[d].append(elem)
         counts[d] += 1
 
-    return "OK"
+    return jsonify(counts)
 
 
 @app.route('/analyze/confirm', methods=['POST'])
@@ -51,7 +51,7 @@ def confirm_recording():
 
 
 @app.route('/crop', methods=['GET'])
-def view_crop():
+def view_cropper():
     return render_template('cropper.html', recordings=get_raw_recordings())
 
 
@@ -68,7 +68,7 @@ def crop_audio():
 
 
 @app.route('/recorder')
-def view_recorder():
+def view_recorder_page():
     return render_template('recorder.html')
 
 

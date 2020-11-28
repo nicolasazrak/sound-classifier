@@ -10,6 +10,10 @@ from keras.callbacks import EarlyStopping
 
 
 def build_lite_rnn_model():
+    # Although it would be probably better to input the raw samples directly and
+    # calculate the melspectogram inside the neural network, doing that
+    # avoids to be able to save this NN in a tensorflow lite format.
+    # Using tf lite allowed me to run this code in a raspberry pi
     X_input = tf.keras.Input(shape=(87, 128,))
 
     X = BatchNormalization()(X_input)
