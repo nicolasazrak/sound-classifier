@@ -43,6 +43,11 @@ def generate_thumbs():
         generate_thumb(file_path)
 
 
+def generate_background():
+    for recording in get_raw_recordings():
+        os.system(f'ffmpeg -i "training-data/raw/{recording}" -f segment -segment_time 2 -c copy "training-data/background/{recording}%03d.wav"')
+
+
 def load_audio(file_or_path):
     padded = np.zeros((44100,))
     y, sr = librosa.load(file_or_path, sr=22050, duration=2)

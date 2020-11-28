@@ -17,7 +17,7 @@
 
 <script>
         async function save() {
-            const response = await fetch("/save", {
+            const response = await fetch("/recordings", {
                 method: 'POST', // *GET, POST, PUT, DELETE, etc.
             });
             document.getElementById("result").innerHTML = await response.text();

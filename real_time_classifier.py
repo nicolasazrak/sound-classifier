@@ -6,8 +6,8 @@ import time
 import numpy as np
 import librosa
 import os.path
-from collections import deque
 from utils import load_audio
+from recorder import Recorder
 import tflite_runtime.interpreter as tflite
 
 
@@ -34,51 +34,8 @@ class Predictor:
         return self.interpreter.get_tensor(self.output_details[0]['index'])[0][0]
 
 
-class Recorder:
-
-    def __init__(self, queue):
-        self.p = pyaudio.PyAudio()
-        self.should_stop = False
-        self.queue = queue
-        self.stop_lock = threading.Lock()
-
-        self.CHUNK = 1024
-        self.FORMAT = pyaudio.paInt16
-        self.CHANNELS = 1
-        self.RATE = 22050
-        self.RECORD_SECONDS = 2
-
-    def start(self):
-        self.stop_lock.acquire()
-        stream = self.p.open(
-            format=self.FORMAT,
-            channels=self.CHANNELS,
-            rate=self.RATE,
-            input=True,
-            frames_per_buffer=self.CHUNK
-        )
-
-        while not self.should_stop:
-            frames = []
-
-            for _ in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
-                data = stream.read(self.CHUNK)
-                frames.append(data)
-
-            self.queue.append(frames)
-
-        stream.stop_stream()
-        stream.close()
-        self.p.terminate()
-        self.stop_lock.release()
-
-    def stop(self):
-        self.should_stop = True
-        self.stop_lock.acquire()
-
-
-def pop_audio(q, recorder):
-    frames = q.pop()
+def pop_audio(recorder):
+    frames = recorder.get_last_samples()
     f = io.BytesIO()
     wf = wave.open(f, 'wb')
     wf.setnchannels(recorder.CHANNELS)
@@ -93,11 +50,9 @@ def pop_audio(q, recorder):
 
 def main():
     print("main()")
-    q = deque([], 1)
-    recorder = Recorder(q)
+    recorder = Recorder(record_seconds=2)
     threading.Thread(target=recorder.start).start()
     predictor = Predictor()
-
     time.sleep(1)
     print("Starting!")
     try:
@@ -105,7 +60,7 @@ def main():
             time.sleep(2)
             start = time.time()
             predicted = 0
-            f = pop_audio(q, recorder)
+            f = pop_audio(recorder)
             loaded_audio = load_audio(f)
             predicted = predictor.predict(loaded_audio)
             if predicted > 0.5:
