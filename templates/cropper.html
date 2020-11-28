@@ -15,23 +15,20 @@
                 <img src="/static/training-data/raw/{{ recording }}.png" alt="audio" onclick="play(event, 'raw/{{recording}}')" />
                 <div class="actions">
                     <span></span>
-                    <button onclick="crop(event, '{{ recording }}', 'clean')">Cortar 2s (audio limpio)</button>
-                    <button onclick="crop(event, '{{ recording }}', 'noisy')">Cortar 2s (audio con ruido)</button>
-                    <button>Borrar</button>
+                    <button onclick="crop(event, '{{ recording }}')">Crop 2s</button>
                 </div>
             </div>
         {% endfor %}
     </div>
     <script src="/static/common.js"></script>
     <script>
-        function crop(event, recording, type) {
+        function crop(event, recording) {
             fetch('/crop', {
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    type,
                     recording,
                     position: audiosPosition[recording]
                 })

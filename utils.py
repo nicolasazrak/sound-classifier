@@ -13,8 +13,7 @@ def get_recognized_recordings():
 
 def get_positive():
     positive = []
-    positive.extend(get_recordings('positive-clean'))
-    positive.extend(get_recordings('positive-noisy'))
+    positive.extend(get_recordings('positive'))
     return positive
 
 
@@ -43,9 +42,9 @@ def generate_thumbs():
         generate_thumb(file_path)
 
 
-def generate_background():
+def split_raw_as_negative():
     for recording in get_raw_recordings():
-        os.system(f'ffmpeg -i "training-data/raw/{recording}" -f segment -segment_time 2 -c copy "training-data/background/{recording}%03d.wav"')
+        os.system(f'ffmpeg -i "training-data/raw/{recording}" -f segment -segment_time 2 -c copy "training-data/negative/{recording}%03d.wav"')
 
 
 def load_audio(file_or_path):

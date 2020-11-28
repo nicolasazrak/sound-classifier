@@ -16,10 +16,8 @@
                 <img src="/static/training-data/recognized/{{ recording }}.png" alt="audio" onclick="play(event, 'recognized/{{recording}}')" />
                 <div class="actions">
                     <span></span>
-                    <button onclick="confirm(event, '{{ recording }}', 'background')">Mark as background</button>
-                    <button onclick="confirm(event, '{{ recording }}', 'positive-clean')">Confirm clean sound</button>
-                    <button onclick="confirm(event, '{{ recording }}', 'positive-noisy')">Confirm noisy sound</button>
-                    <button>Borrar</button>
+                    <button onclick="confirm(event, '{{ recording }}', 'negative')">Confirm as negative</button>
+                    <button onclick="confirm(event, '{{ recording }}', 'positive')">Confirm as positive</button>
                 </div>
             </div>
         {% endfor %}

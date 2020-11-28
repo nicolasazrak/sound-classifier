@@ -12,16 +12,15 @@ def load_tensor_audio(file_or_path):
 
 
 def to_label(file_path):
-    if "background" in file_path:
+    if "negative" in file_path:
         return 0
     return 1
 
 
 def make_datasets():
     filenames = []
-    filenames.extend(glob("training-data/background/*.wav"))
-    filenames.extend(glob("training-data/positive-noisy/*.wav"))
-    filenames.extend(glob("training-data/positive-clean/*.wav"))
+    filenames.extend(glob("training-data/negative/*.wav"))
+    filenames.extend(glob("training-data/positive/*.wav"))
     Random(5).shuffle(filenames)
 
     split_idx = floor(len(filenames) * 0.8)

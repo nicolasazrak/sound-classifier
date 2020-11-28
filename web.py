@@ -7,8 +7,8 @@ import random
 import itertools
 import threading
 from recorder import Recorder
-from utils import get_recognized_recordings, generate_thumbs, get_positive, get_raw_recordings
 from flask import Flask, render_template, request
+from utils import get_recognized_recordings, generate_thumbs, get_positive, get_raw_recordings
 
 
 app = Flask(__name__)
@@ -61,9 +61,8 @@ def crop_audio():
     # https://unix.stackexchange.com/questions/280767/how-do-i-split-an-audio-file-into-multiple
     position = request.json['position']
     recording = request.json['recording']
-    crop_type = request.json['type']
     outname = recording.split(".wav")[0] + "-" + str(random.randint(0, 1000000)) + ".wav"
-    os.system(f'ffmpeg -ss {position} -i "training-data/raw/{recording}" -t 2 "training-data/positive-{crop_type}/{outname}"')
+    os.system(f'ffmpeg -ss {position} -i "training-data/raw/{recording}" -t 2 "training-data/positive/{outname}"')
 
     return "OK"
 
