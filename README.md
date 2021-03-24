@@ -9,3 +9,15 @@ This is simple weekend project to recognize and record sounds in real time with 
   - `/cropper`: It shows a page with all the raw recordings and allows to extract 2 seconds clips and mark them as positive sounds
   - `/analyze`: it shows a page with all the recognized sounds by the `real_time_classifier` and allows to mark them as `positive` or `negative` which can be later used for training
   - `/report`: It shows a simple json with the count of positive sounds by date
+
+
+## TODO
+
+- https://towardsdatascience.com/how-to-reduce-training-time-for-a-deep-learning-model-using-tf-data-43e1989d2961
+- https://stackoverflow.com/questions/54431168/how-to-cache-layer-activations-in-keras
+- https://github.com/kongkip/spela
+- https://medium.com/swlh/how-to-run-gpu-accelerated-signal-processing-in-tensorflow-13e1633f4bfb
+
+
+
+- https://towardsdatascience.com/how-to-easily-process-audio-on-your-gpu-with-tensorflow-2d9d91360f06

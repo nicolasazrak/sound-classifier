@@ -8,7 +8,7 @@ import os.path
 
 class Recorder:
 
-    def __init__(self, record_seconds):
+    def __init__(self, record_seconds, samples_format=pyaudio.paInt16):
         self.p = pyaudio.PyAudio()
         self.frames = []
         self.should_stop = False
@@ -17,9 +17,9 @@ class Recorder:
         self.record_seconds = record_seconds
 
         self.CHUNK = 1024
-        self.FORMAT = pyaudio.paInt16
+        self.FORMAT = samples_format
         self.CHANNELS = 1
-        self.RATE = 44100
+        self.RATE = 16000
 
     def get_last_samples(self):
         frames_copy = []
