@@ -2,11 +2,12 @@ import io
 import wave
 import time
 import pyaudio
+import datetime
 import os.path
 import threading
 import numpy as np
 import tflite_runtime.interpreter as tflite
-from recorder import Recorder
+from recorder import record, save_wav
 
 
 class Predictor:
@@ -58,41 +59,40 @@ class Yamnet:
         return embeddings
 
 
+class RealTimeClassifier:
+
+    def __init__(self):
+        self.predictor = Predictor()
+        self.yamnet = Yamnet()
+        self.samples_buffer = []
+
+    def analyze(self, samples):
+        start = datetime.datetime.now()
+        embeddings = self.yamnet.predict(samples)
+        prediction = self.predictor.predict(embeddings)
+        end = datetime.datetime.now()
+        print("Prediction: " + str(prediction) + ", took: " + str(end-start))
+        if prediction > 0.5:
+            file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + ".wav")
+            save_wav(file_name, samples)
+
+    def on_audio(self, in_data, frame_count, time_info, status):
+        new_samples = np.frombuffer(in_data, dtype=np.float32)
+        self.samples_buffer.extend(new_samples)
+        self.samples_buffer = self.samples_buffer[-32000:]
+        if len(self.samples_buffer) == 32000:
+            self.analyze(self.samples_buffer)
+            self.samples_buffer = []
+        return None, pyaudio.paContinue
+
+    def run(self):
+        print("Starting!")
+        record(self.on_audio)
+
+
 def main():
-    print("main()")
-    recorder = Recorder(record_seconds=4, samples_format=pyaudio.paFloat32)
-    threading.Thread(target=recorder.start).start()
-    predictor = Predictor()
-    yamnet = Yamnet()
-    time.sleep(1)  # Improve this !
-    print("Starting!")
-    try:
-        while True:
-            time.sleep(2)  # Yes, this sucks!
-            start = time.time()
-            predicted = 0
-
-            samples = recorder.get_last_samples()
-            samples = list(map(lambda b: np.frombuffer(b), samples))
-            samples = [item for sublist in samples for item in sublist]
-            if len(samples) > 30000:
-                embeddings = yamnet.predict(samples)
-                prediction = predictor.predict(embeddings)
-                print(prediction)
-            else:
-                print("skipping prediction")
-            # predicted = predictor.predict(loaded_audio)
-            # if predicted > 0.5:
-            #     print(f"Predicted {predicted}. Took: {time.time() - start} seconds. Saving!")
-            #     temp_file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + ".wav")
-            #     with open(temp_file_name, "wb") as outfile:
-            #         f.seek(0)
-            #         outfile.write(f.getbuffer())
-
-    except:
-        print("Stopping")
-        recorder.stop()
-        raise
+    classifier = RealTimeClassifier()
+    classifier.run()
 
 
 main()

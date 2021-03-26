@@ -18,12 +18,12 @@ app = Flask(__name__)
 @app.route('/analyze')
 def view_analyze_page():
     generate_thumbs()
-    return render_template('analyzer.html', recordings=get_recognized_recordings())
+    return render_template('analyzer.html', recordings=list_recognized_recordings())
 
 
 @app.route('/report')
 def view_report_page():
-    positive = get_positive()
+    positive = list_positive_recordings()
     positive = map(lambda r: r.split("-")[1].split(".wav")[0], positive)
     positive = map(lambda r: time.gmtime(float(r)), positive)
 
@@ -53,7 +53,7 @@ def confirm_recording():
 
 @app.route('/crop', methods=['GET'])
 def view_cropper():
-    return render_template('cropper.html', recordings=get_raw_recordings())
+    return render_template('cropper.html', recordings=list_raw_recordings())
 
 
 @app.route('/crop', methods=['POST'])
@@ -75,12 +75,12 @@ def view_recorder_page():
 
 @app.route('/recordings', methods=["POST"])
 def save_recording():
-    return recorder.save_buffer()
+    return recorder.save_last_30_seconds()
 
 
 try:
-    recorder = Recorder(record_seconds=30)
-    threading.Thread(target=recorder.start).start()
+    recorder = BufferedRecorder()
+    recorder.run()
 
     app.run(debug=True, host='0.0.0.0')
 finally:
@@ -90,21 +90,19 @@ finally:
 # Utils
 
 
-def get_raw_recordings():
-    return get_recordings('raw')
+def list_raw_recordings():
+    return list_recordings('raw')
 
 
-def get_recognized_recordings():
-    return get_recordings('recognized')
+def list_recognized_recordings():
+    return list_recordings('recognized')
 
 
-def get_positive():
-    positive = []
-    positive.extend(get_recordings('positive'))
-    return positive
+def list_positive_recordings():
+    return list_recordings('positive')
 
 
-def get_recordings(from_type):
+def list_recordings(from_type):
     recordings = []
     for file in os.listdir(os.path.join("training-data", from_type)):
         if file.endswith(".wav"):
@@ -121,14 +119,14 @@ def generate_thumb(file_path):
 
 
 def generate_thumbs():
-    for recording in get_raw_recordings():
+    for recording in list_raw_recordings():
         file_path = os.path.join("training-data", "raw", recording)
         generate_thumb(file_path)
-    for recording in get_recognized_recordings():
+    for recording in list_recognized_recordings():
         file_path = os.path.join("training-data", "recognized", recording)
         generate_thumb(file_path)
 
 
 def split_raw_as_negative():
-    for recording in get_raw_recordings():
+    for recording in list_raw_recordings():
         os.system(f'ffmpeg -i "training-data/raw/{recording}" -f segment -segment_time 2 -c copy "training-data/negative/{recording}%03d.wav"')
