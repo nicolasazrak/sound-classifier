@@ -21,12 +21,13 @@ def load_tensor_audio(file_path):
     wav, sample_rate = tf.audio.decode_wav(file_contents, desired_channels=1)
     wav = tf.squeeze(wav, axis=-1)
 
-    wav = wav[:44100]
-    zero_padding = tf.zeros([44100] - tf.shape(wav), dtype=tf.float32)
-    wav = tf.concat([wav, zero_padding], 0)
-
     sample_rate = tf.cast(sample_rate, dtype=tf.int64)
     wav = tfio.audio.resample(wav, rate_in=sample_rate, rate_out=16000)
+
+    wav = wav[:32000]
+    zero_padding = tf.zeros([32000] - tf.shape(wav), dtype=tf.float32)
+    wav = tf.concat([wav, zero_padding], 0)
+
     return wav
 
 
@@ -54,12 +55,12 @@ def make_datasets():
     train_filenames = filenames[:split_idx]
     train_embeddings = tf.data.Dataset.from_tensor_slices(train_filenames).map(load_tensor_audio).map(to_embedding)
     train_labels = tf.data.Dataset.from_tensor_slices(list(map(to_label, train_filenames)))
-    train_dataset = tf.data.Dataset.zip((train_embeddings, train_labels)).batch(64).prefetch(tf.data.AUTOTUNE)
+    train_dataset = tf.data.Dataset.zip((train_embeddings, train_labels)).batch(64).prefetch(tf.data.AUTOTUNE).cache()
 
     test_filenames = filenames[split_idx:]
     test_embeddings = tf.data.Dataset.from_tensor_slices(test_filenames).map(load_tensor_audio).map(to_embedding)
     test_labels = tf.data.Dataset.from_tensor_slices(list(map(to_label, test_filenames)))
-    test_dataset = tf.data.Dataset.zip((test_embeddings, test_labels)).batch(64).prefetch(tf.data.AUTOTUNE)
+    test_dataset = tf.data.Dataset.zip((test_embeddings, test_labels)).batch(64).prefetch(tf.data.AUTOTUNE).cache()
 
     return train_dataset, test_dataset
 
