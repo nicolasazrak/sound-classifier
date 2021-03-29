@@ -1,28 +1,32 @@
 <html>
+
 <head>
     <title>Cropper</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/reset.css">
     <link rel="stylesheet" href="/static/style.css">
 </head>
+
 <body>
     <div class="main">
         {% for recording in recordings %}
-            <div class="recording">
-                <div class="title">
-                    {{ recording }}
-                </div>
-                <img src="/static/training-data/raw/{{ recording }}.png" alt="audio" onclick="play(event, 'raw/{{recording}}')" />
-                <div class="actions">
-                    <span></span>
-                    <button onclick="crop(event, '{{ recording }}')">Crop 2s</button>
-                </div>
+        <div class="recording">
+            <div class="title">
+                {{ recording }}
             </div>
+            <img src="/static/training-data/raw/{{ recording }}.png" alt="audio"
+                onclick="play(event, 'raw/{{recording}}')" />
+            <div class="actions">
+                <span></span>
+                <button onclick="crop(event, '{{ recording }}')">Crop 2s</button>
+            </div>
+        </div>
         {% endfor %}
     </div>
     <script src="/static/common.js"></script>
     <script>
         function crop(event, recording) {
+            debugger;
             fetch('/crop', {
                 method: 'post',
                 headers: {
@@ -30,10 +34,11 @@
                 },
                 body: JSON.stringify({
                     recording,
-                    position: audiosPosition[recording]
+                    position: audiosPosition["raw/" + recording]
                 })
             }).catch(console.alert);
         }
     </script>
 </body>
+
 </html>

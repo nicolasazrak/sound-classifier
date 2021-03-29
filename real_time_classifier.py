@@ -7,7 +7,7 @@ import os.path
 import threading
 import numpy as np
 import tflite_runtime.interpreter as tflite
-from recorder import record, save_wav
+from recorder import ChunkedRecorder
 
 
 class Predictor:
@@ -66,28 +66,20 @@ class RealTimeClassifier:
         self.yamnet = Yamnet()
         self.samples_buffer = []
 
-    def analyze(self, samples):
+    def analyze(self, recording):
         start = datetime.datetime.now()
-        embeddings = self.yamnet.predict(samples)
+        embeddings = self.yamnet.predict(recording.samples_at(16000))
         prediction = self.predictor.predict(embeddings)
         end = datetime.datetime.now()
         print("Prediction: " + str(prediction) + ", took: " + str(end-start))
         if prediction > 0.5:
             file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + ".wav")
-            save_wav(file_name, samples)
-
-    def on_audio(self, in_data, frame_count, time_info, status):
-        new_samples = np.frombuffer(in_data, dtype=np.float32)
-        self.samples_buffer.extend(new_samples)
-        self.samples_buffer = self.samples_buffer[-32000:]
-        if len(self.samples_buffer) == 32000:
-            self.analyze(self.samples_buffer)
-            self.samples_buffer = []
-        return None, pyaudio.paContinue
+            recording.save_to(file_name)
 
     def run(self):
         print("Starting!")
-        record(self.on_audio)
+        recorder = ChunkedRecorder(recording_duration=2, callback=self.analyze)
+        recorder.run()
 
 
 def main():

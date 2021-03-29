@@ -8,11 +8,12 @@ import random
 import itertools
 import threading
 import numpy as np
-from recorder import Recorder
+from recorder import BufferedRecorder
 from flask import Flask, render_template, request, jsonify
 
 
 app = Flask(__name__)
+recorder = BufferedRecorder(buffer_seconds=30)
 
 
 @app.route('/analyze')
@@ -53,6 +54,7 @@ def confirm_recording():
 
 @app.route('/crop', methods=['GET'])
 def view_cropper():
+    generate_thumbs()
     return render_template('cropper.html', recordings=list_raw_recordings())
 
 
@@ -75,16 +77,9 @@ def view_recorder_page():
 
 @app.route('/recordings', methods=["POST"])
 def save_recording():
-    return recorder.save_last_30_seconds()
-
-
-try:
-    recorder = BufferedRecorder()
-    recorder.run()
-
-    app.run(debug=True, host='0.0.0.0')
-finally:
-    recorder.stop()
+    output_name = os.path.join("training-data", "raw", "output-" + str(time.time()) + ".wav")
+    recorder.get_last_30_seconds_recording().save_to(output_name)
+    return output_name
 
 
 # Utils
@@ -130,3 +125,10 @@ def generate_thumbs():
 def split_raw_as_negative():
     for recording in list_raw_recordings():
         os.system(f'ffmpeg -i "training-data/raw/{recording}" -f segment -segment_time 2 -c copy "training-data/negative/{recording}%03d.wav"')
+
+
+try:
+    recorder.run()
+    app.run(debug=True, host='0.0.0.0')
+finally:
+    recorder.stop()
