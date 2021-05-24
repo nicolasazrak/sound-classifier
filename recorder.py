@@ -45,6 +45,7 @@ class BufferedRecorder:
             rate=self.rate,
             input=True,
             start=False,
+            frames_per_buffer=4096,
             stream_callback=self.on_audio
         )
 
