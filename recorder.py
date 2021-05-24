@@ -45,7 +45,7 @@ class BufferedRecorder:
             rate=self.rate,
             input=True,
             start=False,
-            frames_per_buffer=8 * 1024,
+            frames_per_buffer=4 * 1024,
             stream_callback=self.on_audio
         )
 
@@ -78,7 +78,7 @@ class ChunkedRecorder:
             channels=1,
             rate=self.rate,
             input=True,
-            frames_per_buffer=8 * 1024,
+            frames_per_buffer=4 * 1024,
             stream_callback=self._on_audio
         )
 
@@ -88,7 +88,10 @@ class ChunkedRecorder:
         while len(self.buffer) > required_samples:
             samples_for_recording, remaining = self.buffer[:required_samples], self.buffer[required_samples:]
             self.buffer = remaining
-            self.callback(Recording(self.recording_duration, samples_for_recording, self.rate))
+            recording = Recording(self.recording_duration, samples_for_recording, self.rate)
+            thread = threading.Thread(target=self.callback, args=[recording])
+            thread.daemon = True
+            thread.start()
         return None, pyaudio.paContinue
 
     def run(self):
