@@ -45,7 +45,7 @@ class BufferedRecorder:
             rate=self.rate,
             input=True,
             start=False,
-            frames_per_buffer=4096,
+            frames_per_buffer=8 * 1024,
             stream_callback=self.on_audio
         )
 
@@ -57,7 +57,7 @@ class BufferedRecorder:
         self.stream.close()
 
     def get_last_30_seconds_recording(self):
-        return Recording(self.buffer_seconds, self.buffer, self.rate)
+        return Recording(self.buffer_seconds, self.buffer[:], self.rate)
 
     def on_audio(self, in_data, frame_count, time_info, status):
         self.buffer.extend(in_data)
@@ -78,7 +78,7 @@ class ChunkedRecorder:
             channels=1,
             rate=self.rate,
             input=True,
-            frames_per_buffer=4096,
+            frames_per_buffer=8 * 1024,
             stream_callback=self._on_audio
         )
 
