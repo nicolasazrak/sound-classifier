@@ -1,0 +1,5 @@
+training-data
+Dockerfile
+__pycache__
+venv
+.git
