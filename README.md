@@ -10,6 +10,12 @@ This is simple weekend project to recognize and record sounds in real time with 
   - `/analyze`: it shows a page with all the recognized sounds by the `real_time_classifier` and allows to mark them as `positive` or `negative` which can be later used for training
   - `/report`: It shows a simple json with the count of positive sounds by date
 
+## Docker usage
+
+Build `docker build -t classifier .`
+
+Run: `docker run --rm -d --device /dev/snd -v "$(pwd)":/app classifier python real_time_classifier.py`
+
 
 ## TODO
 
