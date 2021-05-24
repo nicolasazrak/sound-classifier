@@ -78,6 +78,7 @@ class ChunkedRecorder:
             channels=1,
             rate=self.rate,
             input=True,
+            frames_per_buffer=4096,
             stream_callback=self._on_audio
         )
 
