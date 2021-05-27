@@ -20,16 +20,19 @@ class Recording:
         new_samples = np.frombuffer(self.bytes_chunks, dtype=np.float32)
         return signal.resample(new_samples, rate * self.duration)
 
-    def save_to(self, file_name):
-        s = np.frombuffer(self.bytes_chunks, dtype=np.float32)
+    def save_to_wav(self, file_name, rate):
+        s = self.samples_at(rate)
         s = s * (2 ** 15 - 1)
         s = s.astype(np.int16)
         with wave.open(file_name, "w") as f:
             f.setnchannels(1)
             f.setsampwidth(2)
-            f.setframerate(self.original_sample_rate)
-            s.byteswap()
+            f.setframerate(rate)
             f.writeframes(s.tobytes())
+
+    def save_to_numpy(self, file_name, rate):
+        s = self.samples_at(rate)
+        np.save(file_name, s)
 
 
 class BufferedRecorder:
@@ -57,7 +60,10 @@ class BufferedRecorder:
         self.stream.close()
 
     def get_last_30_seconds_recording(self):
-        return Recording(self.buffer_seconds, self.buffer[:], self.rate)
+        return self.get_recoding_from_last(seconds=30)
+
+    def get_recoding_from_last(self, seconds):
+        return Recording(seconds, self.buffer[-self.rate * seconds * 4:], self.rate)
 
     def on_audio(self, in_data, frame_count, time_info, status):
         self.buffer.extend(in_data)
@@ -114,6 +120,7 @@ if __name__ == "__main__":
 
     c = BufferedRecorder(5)
     c.run()
-    time.sleep(3)
-    r = c.get_last_30_seconds_recording()
-    r.save_to('hola.wav')
+    time.sleep(2)
+    r = c.get_recoding_from_last(seconds=2)
+    samples = r.samples_at(16000)
+    r.save_to_numpy('hola', 16000)

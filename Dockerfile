@@ -3,7 +3,7 @@
 FROM python:3.7.10-slim-buster
 
 # RUN apt-get update && apt-get install -y curl gnupg portaudio19-dev python3-pyaudio python3-tflite-runtime gcc
-RUN apt-get update && apt-get install -y curl gnupg portaudio19-dev gcc alsa-utils
+RUN apt-get update && apt-get install -y curl gnupg portaudio19-dev gcc alsa-utils nano
 RUN pip install pyaudio numpy scipy flask
 RUN mkdir /app
 WORKDIR /app

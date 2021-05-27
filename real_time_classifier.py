@@ -73,8 +73,8 @@ class RealTimeClassifier:
         end = datetime.datetime.now()
         print("Prediction: " + str(prediction) + ", took: " + str(end-start))
         if prediction > 0.5:
-            file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + ".wav")
-            recording.save_to(file_name)
+            file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + "-" + str(prediction) + ".wav")
+            recording.save_to_wav(file_name, 16000)
 
     def run(self):
         print("Starting!")
@@ -87,4 +87,5 @@ def main():
     classifier.run()
 
 
-main()
+if __name__ == "__main__":
+    main()
