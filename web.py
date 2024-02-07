@@ -78,7 +78,7 @@ def view_recorder_page():
 @app.route('/recordings', methods=["POST"])
 def save_recording():
     output_name = os.path.join("training-data", "raw", "output-" + str(time.time()) + ".wav")
-    recorder.get_last_30_seconds_recording().save_to(output_name)
+    recorder.get_last_30_seconds_recording().save_to_wav(output_name)
     return output_name
 
 

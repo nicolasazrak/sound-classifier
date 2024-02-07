@@ -20,7 +20,8 @@ class Recording:
         new_samples = np.frombuffer(self.bytes_chunks, dtype=np.float32)
         return signal.resample(new_samples, rate * self.duration)
 
-    def save_to_wav(self, file_name, rate):
+    def save_to_wav(self, file_name, rate=None):
+        rate = rate or self.original_sample_rate
         s = self.samples_at(rate)
         s = s * (2 ** 15 - 1)
         s = s.astype(np.int16)

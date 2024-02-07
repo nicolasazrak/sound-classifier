@@ -37,7 +37,7 @@ def load_numpy_file(file_path):
 
 def load_tensor_audio(file_path):
     matches = tf.strings.regex_full_match(file_path, ".*\.wav$")
-    return tf.cond(matches, lambda: load_wav_file(file_path), lambda: tf.py_func(load_numpy_file, inp=[file_path], Tout=tf.float32))
+    return tf.cond(matches, lambda: load_wav_file(file_path), lambda: tf.numpy_function(load_numpy_file, inp=[file_path], Tout=tf.float32))
 
 
 def to_embedding(wav_tensor):
