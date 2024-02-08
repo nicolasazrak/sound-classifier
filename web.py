@@ -26,7 +26,7 @@ def view_analyze_page():
 def view_report_page():
     positive = list_positive_recordings()
     positive = map(lambda r: r.split("-")[1].split(".wav")[0], positive)
-    positive = map(lambda r: time.gmtime(float(r)), positive)
+    positive = map(lambda r: time.localtime(float(r)), positive)
 
     grouped = {}
     counts = {}
