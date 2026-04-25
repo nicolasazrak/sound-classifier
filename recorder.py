@@ -1,16 +1,16 @@
-import sys
-import wave
-import time
-import struct
-import pyaudio
 import threading
-import os.path
-import scipy.signal as signal
+import time
+import wave
+from typing import Optional
+
 import numpy as np
+import pyaudio
+import scipy.signal as signal
+
+import config
 
 
 class Recording:
-
     def __init__(self, duration, bytes_chunks, original_sample_rate):
         self.duration = duration
         self.bytes_chunks = bytes_chunks
@@ -18,12 +18,20 @@ class Recording:
 
     def samples_at(self, rate):
         new_samples = np.frombuffer(self.bytes_chunks, dtype=np.float32)
-        return signal.resample(new_samples, rate * self.duration)
+        # Use resample_poly for better audio quality than resample
+        # This method is optimized for audio and maintains signal integrity
+        original_length = len(new_samples)
+        target_length = int(rate * self.duration)
+        if original_length == target_length:
+            return new_samples
+        return signal.resample_poly(new_samples, target_length, original_length)
 
     def save_to_wav(self, file_name, rate=None):
         rate = rate or self.original_sample_rate
         s = self.samples_at(rate)
-        s = s * (2 ** 15 - 1)
+        # Ensure float samples are in [-1.0, 1.0] range for proper int16 conversion
+        s = np.clip(s, -1.0, 1.0)
+        s = s * (2**15 - 1)
         s = s.astype(np.int16)
         with wave.open(file_name, "w") as f:
             f.setnchannels(1)
@@ -37,21 +45,29 @@ class Recording:
 
 
 class BufferedRecorder:
-
-    def __init__(self, buffer_seconds):
+    def __init__(self, input_device: int, rate=44100, buffer_seconds: int = 30):
         self.buffer = bytearray()
-        self.rate = 44100
+        self.rate = rate
         self.buffer_seconds = buffer_seconds
+        self.input_device = input_device
         self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(
-            format=pyaudio.paFloat32,
-            channels=1,
-            rate=self.rate,
-            input=True,
-            start=False,
-            frames_per_buffer=4 * 1024,
-            stream_callback=self.on_audio
-        )
+
+        # Configure stream parameters
+        stream_params = {
+            "format": pyaudio.paFloat32,
+            "channels": 1,
+            "rate": self.rate,
+            "input": True,
+            "start": False,
+            "frames_per_buffer": 4 * 1024,
+            "stream_callback": self.on_audio,
+        }
+
+        # Add input device if specified
+        if self.input_device is not None:
+            stream_params["input_device_index"] = self.input_device
+
+        self.stream = self.p.open(**stream_params)
 
     def run(self):
         self.stream.start_stream()
@@ -64,38 +80,55 @@ class BufferedRecorder:
         return self.get_recoding_from_last(seconds=30)
 
     def get_recoding_from_last(self, seconds):
-        return Recording(seconds, self.buffer[-self.rate * seconds * 4:], self.rate)
+        return Recording(seconds, self.buffer[-self.rate * seconds * 4 :], self.rate)
 
     def on_audio(self, in_data, frame_count, time_info, status):
         self.buffer.extend(in_data)
-        self.buffer = self.buffer[-self.rate * self.buffer_seconds * 4:]
+        self.buffer = self.buffer[-self.rate * self.buffer_seconds * 4 :]
         return None, pyaudio.paContinue
 
 
 class ChunkedRecorder:
-
-    def __init__(self, recording_duration, callback):
+    def __init__(
+        self, input_device: int, recording_duration, callback, sample_rate=44100
+    ):
         self.buffer = bytearray()
-        self.rate = 44100
+        self.rate = sample_rate
         self.recording_duration = recording_duration
+        self.input_device = input_device
         self.p = pyaudio.PyAudio()
         self.callback = callback
-        self.stream = self.p.open(
-            format=pyaudio.paFloat32,
-            channels=1,
-            rate=self.rate,
-            input=True,
-            frames_per_buffer=4 * 1024,
-            stream_callback=self._on_audio
-        )
+
+        # Configure stream parameters
+        stream_params = {
+            "format": pyaudio.paFloat32,
+            "channels": 1,
+            "rate": self.rate,
+            "input": True,
+            "frames_per_buffer": 4 * 1024,
+            "stream_callback": self._on_audio,
+        }
+
+        # Add input device if specified
+        if self.input_device is not None:
+            stream_params["input_device_index"] = self.input_device
+
+        self.stream = self.p.open(**stream_params)
 
     def _on_audio(self, in_data, frame_count, time_info, status):
         self.buffer.extend(in_data)
-        required_samples = self.rate * self.recording_duration * 4  # 4 bytes each sample
+        required_samples = (
+            self.rate * self.recording_duration * 4
+        )  # 4 bytes each sample
         while len(self.buffer) > required_samples:
-            samples_for_recording, remaining = self.buffer[:required_samples], self.buffer[required_samples:]
+            samples_for_recording, remaining = (
+                self.buffer[:required_samples],
+                self.buffer[required_samples:],
+            )
             self.buffer = remaining
-            recording = Recording(self.recording_duration, samples_for_recording, self.rate)
+            recording = Recording(
+                self.recording_duration, samples_for_recording, self.rate
+            )
             thread = threading.Thread(target=self.callback, args=[recording])
             thread.daemon = True
             thread.start()
@@ -113,15 +146,17 @@ class ChunkedRecorder:
 
 
 if __name__ == "__main__":
+
     def cb(recording):
-        print(len(recording.samples_at(16000)))
+        print(len(recording.samples_at(48000)))
 
     # c = ChunkedRecorder(2, cb)
     # c.run()
 
-    c = BufferedRecorder(5)
+    c = BufferedRecorder(config.INPUT_DEVICE, buffer_seconds=15)
     c.run()
-    time.sleep(2)
-    r = c.get_recoding_from_last(seconds=2)
-    samples = r.samples_at(16000)
-    r.save_to_numpy('hola', 16000)
+    time.sleep(5)
+    r = c.get_recoding_from_last(seconds=5)
+    samples = r.samples_at(44100)
+    r.save_to_wav("hola.wav")
+    r.save_to_numpy("hola", 44100)

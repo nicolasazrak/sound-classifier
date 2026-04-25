@@ -3,3 +3,10 @@ Dockerfile
 __pycache__
 venv
 .git
+.venv
+uv.lock
+.gitignore
+*.pyc
+.pytest_cache
+.ruff_cache
+.venv

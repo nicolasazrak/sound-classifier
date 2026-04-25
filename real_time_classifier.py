@@ -1,17 +1,24 @@
-import io
-import wave
-import time
-import pyaudio
 import datetime
+import io
 import os.path
 import threading
+import time
+import wave
+
 import numpy as np
-import tflite_runtime.interpreter as tflite
+import pyaudio
+
+import config
+
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    import tensorflow.lite as tflite
+
 from recorder import ChunkedRecorder
 
 
 class Predictor:
-
     def __init__(self):
         self.interpreter = tflite.Interpreter(model_path="model.tflite")
         self.interpreter.allocate_tensors()
@@ -20,47 +27,49 @@ class Predictor:
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
 
-        self.input_shape = self.input_details[0]['shape']
+        self.input_shape = self.input_details[0]["shape"]
 
     def predict(self, embeddings):
         embeddings = np.expand_dims(embeddings, axis=0).astype(np.float32)
-        self.interpreter.set_tensor(self.input_details[0]['index'], embeddings)
+        self.interpreter.set_tensor(self.input_details[0]["index"], embeddings)
 
         self.interpreter.invoke()
 
         # The function `get_tensor()` returns a copy of the tensor data.
         # Use `tensor()` in order to get a pointer to the tensor.
-        return self.interpreter.get_tensor(self.output_details[0]['index'])[0][0]
+        return self.interpreter.get_tensor(self.output_details[0]["index"])[0][0]
 
 
 class Yamnet:
-
     def __init__(self):
-        self.interpreter = tflite.Interpreter('yamnet.tflite')
+        self.interpreter = tflite.Interpreter("yamnet.tflite")
 
         self.input_details = self.interpreter.get_input_details()
-        self.waveform_input_index = self.input_details[0]['index']
+        self.waveform_input_index = self.input_details[0]["index"]
         self.output_details = self.interpreter.get_output_details()
-        self.scores_output_index = self.output_details[0]['index']
-        self.embeddings_output_index = self.output_details[1]['index']
-        self.spectrogram_output_index = self.output_details[2]['index']
+        self.scores_output_index = self.output_details[0]["index"]
+        self.embeddings_output_index = self.output_details[1]["index"]
+        self.spectrogram_output_index = self.output_details[2]["index"]
 
     def predict(self, samples):
-        self.interpreter.resize_tensor_input(self.waveform_input_index, [len(samples)], strict=True)
+        self.interpreter.resize_tensor_input(
+            self.waveform_input_index, [len(samples)], strict=True
+        )
         self.interpreter.allocate_tensors()
-        self.interpreter.set_tensor(self.waveform_input_index, np.array(samples, dtype=np.float32))
+        self.interpreter.set_tensor(
+            self.waveform_input_index, np.array(samples, dtype=np.float32)
+        )
         self.interpreter.invoke()
         scores, embeddings, spectrogram = (
             self.interpreter.get_tensor(self.scores_output_index),
             self.interpreter.get_tensor(self.embeddings_output_index),
-            self.interpreter.get_tensor(self.spectrogram_output_index)
+            self.interpreter.get_tensor(self.spectrogram_output_index),
         )
         # print(scores.shape, embeddings.shape, spectrogram.shape)  # (N, 521) (N, 1024) (M, 64)
         return embeddings
 
 
 class RealTimeClassifier:
-
     def __init__(self):
         self.predictor = Predictor()
         self.yamnet = Yamnet()
@@ -71,14 +80,22 @@ class RealTimeClassifier:
         embeddings = self.yamnet.predict(recording.samples_at(16000))
         prediction = self.predictor.predict(embeddings)
         end = datetime.datetime.now()
-        print("Prediction: " + str(prediction) + ", took: " + str(end-start))
+        print("Prediction: " + str(prediction) + ", took: " + str(end - start))
         if prediction > 0.5:
-            file_name = os.path.join("training-data", "recognized", "tmp-" + str(time.time()) + "-" + str(prediction) + ".wav")
+            file_name = os.path.join(
+                "training-data",
+                "recognized",
+                "tmp-" + str(time.time()) + "-" + str(prediction) + ".wav",
+            )
             recording.save_to_wav(file_name, 16000)
 
     def run(self):
         print("Starting!")
-        recorder = ChunkedRecorder(recording_duration=2, callback=self.analyze)
+        recorder = ChunkedRecorder(
+            input_device=config.INPUT_DEVICE,
+            recording_duration=2,
+            callback=self.analyze,
+        )
         recorder.run()
 
 

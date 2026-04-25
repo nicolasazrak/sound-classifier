@@ -1,3 +1,8 @@
 .DS_store
 *.pyc
-training-data.zip
+# training-data.zip
+# training-data/*
+.ruff_cache
+.venv
+__pycache__
+.DS_store
