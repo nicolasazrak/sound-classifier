@@ -4,14 +4,12 @@ version = "0.1.0"
 description = "Real-time audio classification using YamNet and TensorFlow Lite"
 requires-python = ">=3.11,<3.12"
 dependencies = [
-    "tensorflow>=2.13,<2.16",
-    "tensorflow-hub==0.14.0",
+    "tflite-runtime>=2.14.0",
     "flask>=3.0",
     "pyaudio>=0.2.13",
     "numpy>=1.24,<2.0",
     "scipy>=1.10",
     "setuptools>=68.0,<71.0",
-    "tensorflow-io>=0.36.0,<0.37.0",
 ]
 
 [build-system]
@@ -26,6 +24,13 @@ dev = [
     "pytest>=7.4",
     "black>=23.0",
     "ruff>=0.1",
+]
+
+[project.optional-dependencies]
+train = [
+    "tensorflow>=2.13,<2.16",
+    "tensorflow-hub==0.14.0",
+    "tensorflow-io>=0.36.0,<0.37.0",
 ]
 
 [tool.ruff]
