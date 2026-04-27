@@ -1,0 +1,68 @@
+{% extends "partials/base.html" %}
+
+{% block title %}Stats - Sound Classifier{% endblock %}
+
+{% block content %}
+<div class="main" style="grid-template-columns: 1fr; max-width: 800px;">
+    <div class="recording">
+        <div class="title">
+            <div>Detection Statistics</div>
+        </div>
+        <div id="stats-content" style="padding: 1rem;">
+            <p style="color: var(--text-secondary);">Loading statistics...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadStats() {
+        try {
+            const response = await fetch("/report");
+            const data = await response.json();
+            
+            if (Object.keys(data).length === 0) {
+                document.getElementById("stats-content").innerHTML = `
+                    <p style="color: var(--text-secondary); text-align: center;">No detections recorded yet.</p>
+                `;
+                return;
+            }
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+            
+            const sortedDates = Object.keys(data).sort().reverse();
+            
+            for (const date of sortedDates) {
+                html += `
+                    <div style="background-color: var(--bg-secondary); padding: 1rem; border-radius: 8px;">
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem;">${date}</div>
+                        <div style="color: var(--text-secondary);">${data[date]} detection${data[date] !== 1 ? 's' : ''}</div>
+                    </div>
+                `;
+            }
+            
+            const total = Object.values(data).reduce((a, b) => a + b, 0);
+            html += `
+                <div style="background-color: var(--accent-green); color: white; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                    <div style="font-weight: 600;">Total Detections</div>
+                    <div>${total} total detection${total !== 1 ? 's' : ''}</div>
+                </div>
+            `;
+            
+            html += '</div>';
+            
+            document.getElementById("stats-content").innerHTML = html;
+        } catch (error) {
+            console.error("Error loading stats:", error);
+            document.getElementById("stats-content").innerHTML = `
+                <p style="color: var(--accent-red); text-align: center;">Error loading statistics</p>
+            `;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadStats();
+    });
+</script>
+{% endblock %}

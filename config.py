@@ -4,6 +4,7 @@ Configuration for sound classifier audio settings.
 """
 
 INPUT_DEVICE = 7
+SAMPLE_RATE = 44100  # Must match your audio device's native rate
 
 # Web app configuration
 WEB_CONFIG = {

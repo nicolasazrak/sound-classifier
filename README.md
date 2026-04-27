@@ -30,7 +30,19 @@ uv sync
 # Run applications
 uv run python real_time_classifier.py  # Real-time classification
 uv run python web.py                    # Web interface
-uv run python train.py                  # Train model
+uv run python train.py                  # Train model (requires full TensorFlow)
+```
+
+### Raspberry Pi Setup
+
+For Raspberry Pi and other ARM devices, use the optimized TensorFlow Lite runtime:
+
+```bash
+# Install dependencies (optimized for ARM)
+uv sync
+
+# The project uses tflite-runtime for inference on Raspberry Pi
+# Training requires full TensorFlow and should be done on a more powerful system
 ```
 
 
@@ -85,6 +97,8 @@ uv run ruff check .
 - Audio input device (microphone)
 - For Docker: Linux with audio device support
 - Recommended: 2GB+ RAM for TensorFlow
+- **Raspberry Pi**: Use `tflite-runtime` package (included by default)
+- **Training**: Full TensorFlow required (install with `uv sync --extras train`)
 
 
 ## TODO

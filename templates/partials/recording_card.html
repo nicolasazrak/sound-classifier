@@ -1,0 +1,15 @@
+<div class="recording" data-recording="{{ recording_path }}">
+    <div class="title">
+        <div>{{ title }}</div>
+        {% if subtitle %}
+        <div style="font-size: 0.875em; color: var(--text-secondary);">{{ subtitle }}</div>
+        {% endif %}
+    </div>
+    <div class="waveform-container">
+        <img class="recording-image" src="{{ waveform_src }}" alt="audio" onclick="play(event, '{{ recording_path }}')" />
+        <div class="playback-line"></div>
+    </div>
+    <div class="actions">
+        {% block actions %}{% endblock %}
+    </div>
+</div>

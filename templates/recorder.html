@@ -1,25 +1,28 @@
-<html>
-<head>
-    <title>Recorder</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/reset.css">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <div class="main">
-        <h1>Recorder</h1>
-        <div id='button-container'>
-            <button onclick="save()">Guardar con 30 segundos</button>
+{% extends "partials/base.html" %}
+
+{% block title %}Recorder - Sound Classifier{% endblock %}
+
+{% block content %}
+<div class="main" style="grid-template-columns: 1fr; max-width: 600px;">
+    <div class="recording">
+        <div class="title">
+            <div>Recorder</div>
         </div>
-        <div id="result">Resultado...</div>
+        <div id='button-container'>
+            <button class="btn-positive" onclick="save()">Save last 30 seconds</button>
+        </div>
+        <div id="result" style="text-align: center; color: var(--text-secondary); margin-top: 1rem;">Result...</div>
     </div>
-    <script>
-        async function save() {
-            const response = await fetch("/recordings", {
-                method: 'POST', // *GET, POST, PUT, DELETE, etc.
-            });
-            document.getElementById("result").innerHTML = await response.text();
-        }
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function save() {
+        const response = await fetch("/recordings", {
+            method: 'POST',
+        });
+        document.getElementById("result").innerHTML = await response.text();
+    }
+</script>
+{% endblock %}

@@ -3,7 +3,7 @@ revision = 3
 requires-python = "==3.11.*"
 
 [options]
-exclude-newer = "2026-04-18T01:56:46.532696088Z"
+exclude-newer = "2026-04-18T03:25:13.33649698Z"
 exclude-newer-span = "P7D"
 
 [[package]]
@@ -677,6 +677,11 @@ dependencies = [
     { name = "pyaudio" },
     { name = "scipy" },
     { name = "setuptools" },
+    { name = "tflite-runtime" },
+]
+
+[package.optional-dependencies]
+train = [
     { name = "tensorflow" },
     { name = "tensorflow-hub" },
     { name = "tensorflow-io" },
@@ -696,10 +701,12 @@ requires-dist = [
     { name = "pyaudio", specifier = ">=0.2.13" },
     { name = "scipy", specifier = ">=1.10" },
     { name = "setuptools", specifier = ">=68.0,<71.0" },
-    { name = "tensorflow", specifier = ">=2.13,<2.16" },
-    { name = "tensorflow-hub", specifier = "==0.14.0" },
-    { name = "tensorflow-io", specifier = ">=0.36.0,<0.37.0" },
+    { name = "tensorflow", marker = "extra == 'train'", specifier = ">=2.13,<2.16" },
+    { name = "tensorflow-hub", marker = "extra == 'train'", specifier = "==0.14.0" },
+    { name = "tensorflow-io", marker = "extra == 'train'", specifier = ">=0.36.0,<0.37.0" },
+    { name = "tflite-runtime", specifier = ">=2.14.0" },
 ]
+provides-extras = ["train"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -828,6 +835,19 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/46/79/cf31d7a93a8fdc6aa0fbb665be84426a8c5a557d9240b6239e9e11e35fc5/termcolor-3.3.0.tar.gz", hash = "sha256:348871ca648ec6a9a983a13ab626c0acce02f515b9e1983332b17af7979521c5", size = 14434, upload-time = "2025-12-29T12:55:21.882Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/d1/8bb87d21e9aeb323cc03034f5eaf2c8f69841e40e4853c2627edf8111ed3/termcolor-3.3.0-py3-none-any.whl", hash = "sha256:cf642efadaf0a8ebbbf4bc7a31cec2f9b5f21a9f726f4ccbb08192c9c26f43a5", size = 7734, upload-time = "2025-12-29T12:55:20.718Z" },
+]
+
+[[package]]
+name = "tflite-runtime"
+version = "2.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/a6/02d68cb62cd221589a0ff055073251d883936237c9c990e34a1d7cecd06f/tflite_runtime-2.14.0-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:195ab752e7e57329a68e54dd3dd5439fad888b9bff1be0f0dc042a3237a90e4d", size = 2414486, upload-time = "2023-10-03T21:15:44.331Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/e9/5fc0435129c23c17551fcfadc82bd0d5482276213dfbc641f07b4420cb6d/tflite_runtime-2.14.0-cp311-cp311-manylinux_2_34_aarch64.whl", hash = "sha256:ce9fa5d770a9725c746dcbf6f59f3178233b3759f09982e8b2db8d2234c333b0", size = 2325913, upload-time = "2023-10-03T21:15:46.348Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/76/e246c39d92929655bac8878d76406d6fb0293c678237e55621e7ece4a269/tflite_runtime-2.14.0-cp311-cp311-manylinux_2_34_armv7l.whl", hash = "sha256:c4e66a74165b18089c86788400af19fa551768ac782d231a9beae2f6434f7949", size = 1820588, upload-time = "2023-10-03T21:15:48.399Z" },
 ]
 
 [[package]]

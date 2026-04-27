@@ -1,44 +1,43 @@
-<html>
+{% extends "partials/base.html" %}
 
-<head>
-    <title>Cropper</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/reset.css">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
+{% block title %}Cropper - Sound Classifier{% endblock %}
 
-<body>
-    <div class="main">
-        {% for recording in recordings %}
-        <div class="recording">
-            <div class="title">
-                {{ recording }}
-            </div>
-            <img src="/static/training-data/raw/{{ recording }}.png" alt="audio"
-                onclick="play(event, 'raw/{{recording}}')" />
-            <div class="actions">
-                <span></span>
-                <button onclick="crop(event, '{{ recording }}')">Crop 2s</button>
-            </div>
+{% block content %}
+<div class="main">
+    {% for recording in recordings %}
+    {% set parts = recording.replace('output-', '').replace('.wav', '').split('-') %}
+    {% set timestamp = parts[0] | float %}
+    
+    <div class="recording" data-recording="raw/{{recording}}">
+        <div class="title">
+            <div>{{ timestamp | strftime('%Y-%m-%d %H:%M:%S') }}</div>
         </div>
-        {% endfor %}
+        <div class="waveform-container">
+            <img class="recording-image" src="/static/training-data/raw/{{ recording }}.png" alt="audio"
+                onclick="play(event, 'raw/{{recording}}')" />
+            <div class="playback-line"></div>
+        </div>
+        <div class="actions">
+            <button class="btn-positive" onclick="crop(event, '{{ recording }}')">Crop 2s</button>
+        </div>
     </div>
-    <script src="/static/common.js"></script>
-    <script>
-        function crop(event, recording) {
-            debugger;
-            fetch('/crop', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    recording,
-                    position: audiosPosition["raw/" + recording]
-                })
-            }).catch(console.alert);
-        }
-    </script>
-</body>
+    {% endfor %}
+</div>
+{% endblock %}
 
-</html>
+{% block scripts %}
+<script>
+    function crop(event, recording) {
+        fetch('/crop', {
+            method: 'post',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                recording,
+                position: audiosPosition["raw/" + recording]
+            })
+        }).catch(console.error);
+    }
+</script>
+{% endblock %}

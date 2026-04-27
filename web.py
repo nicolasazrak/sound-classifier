@@ -1,26 +1,34 @@
-import itertools
+import datetime
 import os
 import os.path
 import random
-import sys
-import threading
 import time
-import wave
 
-import numpy as np
 from flask import Flask, jsonify, render_template, request
 
 import config
 from recorder import BufferedRecorder
 
 app = Flask(__name__)
-recorder = BufferedRecorder(buffer_seconds=30, input_device=config.INPUT_DEVICE)
+recorder = BufferedRecorder(
+    buffer_seconds=30, input_device=config.INPUT_DEVICE, rate=config.SAMPLE_RATE
+)
+
+
+@app.template_filter("strftime")
+def strftime_filter(timestamp, format_str):
+    return datetime.datetime.fromtimestamp(timestamp).strftime(format_str)
 
 
 @app.route("/analyze")
 def view_analyze_page():
     generate_thumbs()
     return render_template("analyzer.html", recordings=list_recognized_recordings())
+
+
+@app.route("/stats")
+def view_stats_page():
+    return render_template("stats.html")
 
 
 @app.route("/report")
@@ -76,7 +84,7 @@ def crop_audio():
         f'ffmpeg -ss {position} -i "training-data/raw/{recording}" -t 2 "training-data/positive/{outname}"'
     )
 
-    return "OK"
+    return f"training-data/positive/{outname}"
 
 
 @app.route("/recorder")
@@ -119,9 +127,10 @@ def list_recordings(from_type):
 
 def generate_thumb(file_path):
     if not os.path.isfile(file_path + ".png"):
-        print("Generating {file_path}.png")
+        print(f"Generating {file_path}.png")
+
         os.system(
-            f'ffmpeg -i "{file_path}"  -filter_complex "[0:a]aformat=channel_layouts=mono,  compand=gain=10,  showwavespic=s=600x120:colors=#9cf42f[fg];  color=s=600x120:color=#44582c,  drawgrid=width=iw/10:height=ih/5:color=#9cf42f@0.1[bg];  [bg][fg]overlay=format=auto,drawbox=x=(iw-w)/2:y=(ih-h)/2:w=iw:h=1:color=#9cf42f" -frames:v 1 "{file_path}.png"'
+            f'ffmpeg -i "{file_path}" -filter_complex "[0:a]aformat=channel_layouts=mono,showwavespic=s=600x120:colors=#9cf42f[fg];color=s=600x120:color=#44582c,drawgrid=width=iw/10:height=ih/5:color=#9cf42f@0.1[bg];[bg][fg]overlay=format=auto" -frames:v 1 "{file_path}.png"'
         )
 
 

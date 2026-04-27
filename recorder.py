@@ -18,19 +18,15 @@ class Recording:
 
     def samples_at(self, rate):
         new_samples = np.frombuffer(self.bytes_chunks, dtype=np.float32)
-        # Use resample_poly for better audio quality than resample
-        # This method is optimized for audio and maintains signal integrity
-        original_length = len(new_samples)
         target_length = int(rate * self.duration)
+        original_length = len(new_samples)
         if original_length == target_length:
             return new_samples
-        return signal.resample_poly(new_samples, target_length, original_length)
+        return signal.resample(new_samples, target_length)
 
     def save_to_wav(self, file_name, rate=None):
         rate = rate or self.original_sample_rate
         s = self.samples_at(rate)
-        # Ensure float samples are in [-1.0, 1.0] range for proper int16 conversion
-        s = np.clip(s, -1.0, 1.0)
         s = s * (2**15 - 1)
         s = s.astype(np.int16)
         with wave.open(file_name, "w") as f:
@@ -45,7 +41,7 @@ class Recording:
 
 
 class BufferedRecorder:
-    def __init__(self, input_device: int, rate=44100, buffer_seconds: int = 30):
+    def __init__(self, input_device: int, rate=22050, buffer_seconds: int = 30):
         self.buffer = bytearray()
         self.rate = rate
         self.buffer_seconds = buffer_seconds
@@ -58,14 +54,11 @@ class BufferedRecorder:
             "channels": 1,
             "rate": self.rate,
             "input": True,
+            "input_device_index": input_device,
             "start": False,
             "frames_per_buffer": 4 * 1024,
             "stream_callback": self.on_audio,
         }
-
-        # Add input device if specified
-        if self.input_device is not None:
-            stream_params["input_device_index"] = self.input_device
 
         self.stream = self.p.open(**stream_params)
 
@@ -90,12 +83,11 @@ class BufferedRecorder:
 
 class ChunkedRecorder:
     def __init__(
-        self, input_device: int, recording_duration, callback, sample_rate=44100
+        self, input_device: int, recording_duration, callback, sample_rate=22050
     ):
         self.buffer = bytearray()
         self.rate = sample_rate
         self.recording_duration = recording_duration
-        self.input_device = input_device
         self.p = pyaudio.PyAudio()
         self.callback = callback
 
@@ -105,13 +97,10 @@ class ChunkedRecorder:
             "channels": 1,
             "rate": self.rate,
             "input": True,
+            "input_device_index": input_device,
             "frames_per_buffer": 4 * 1024,
             "stream_callback": self._on_audio,
         }
-
-        # Add input device if specified
-        if self.input_device is not None:
-            stream_params["input_device_index"] = self.input_device
 
         self.stream = self.p.open(**stream_params)
 

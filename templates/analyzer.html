@@ -1,50 +1,73 @@
-<html>
-<head>
-    <title>Analyzer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/reset.css">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    
-    <div class="main">
-        {% for recording in recordings %}
-            <div class="recording">
-                <div class="title">
-                    {{ recording }}
-                </div>
-                <img src="/static/training-data/recognized/{{ recording }}.png" alt="audio" onclick="play(event, 'recognized/{{recording}}')" />
-                <div class="actions">
-                    <span></span>
-                    <button onclick="confirm(event, '{{ recording }}', 'negative')">Confirm as negative</button>
-                    <button onclick="confirm(event, '{{ recording }}', 'positive')">Confirm as positive</button>
-                </div>
+{% extends "partials/base.html" %}
+
+{% block title %}Analyzer - Sound Classifier{% endblock %}
+
+{% block content %}
+<div class="main">
+    {% for recording in recordings %} {% set parts =
+    recording.split('-') %} {% set timestamp = parts[1] %} {% set
+    probability = parts[2].replace('.wav', '') %} {% set
+    probability_float = probability | float %} {% set
+    probability_percent = (probability_float * 100) | round(1) %} {% set
+    date = timestamp | float %}
+
+    <div class="recording" data-recording="recognized/{{recording}}">
+        <div class="title">
+            <div>{{ date | strftime('%Y-%m-%d %H:%M:%S') }}</div>
+            <div
+                style="font-size: 0.875em; color: var(--text-secondary)"
+            >
+                {{ probability_percent }}% confidence
             </div>
-        {% endfor %}
+        </div>
+        <div class="waveform-container">
+            <img
+                class="recording-image"
+                src="/static/training-data/recognized/{{ recording }}.png"
+                alt="audio"
+                onclick="play(event, 'recognized/{{recording}}')"
+            />
+            <div class="playback-line"></div>
+        </div>
+        <div class="actions">
+            <button
+                class="btn-negative"
+                onclick="confirm(event, '{{ recording }}', 'negative')"
+            >
+                Negative
+            </button>
+            <button
+                class="btn-positive"
+                onclick="confirm(event, '{{ recording }}', 'positive')"
+            >
+                Positive
+            </button>
+        </div>
     </div>
+    {% endfor %}
+</div>
+{% endblock %}
 
-    <script src="/static/common.js"></script>
+{% block scripts %}
+<script>
+    function confirm(event, recording, type) {
+        console.log(recording, type);
+        const parentRecording = event.target.closest(".recording");
+        parentRecording.classList.add("disapear");
+        setTimeout(() => {
+            parentRecording.remove();
+        }, 500);
 
-    <script>
-        function confirm(event, recording, type) {
-            console.log(recording, type);
-            const parentRecording = event.target.closest(".recording");
-            parentRecording.classList.add('disapear');
-            setTimeout(() => {
-                parentRecording.remove();
-            }, 500);
-
-            fetch('/analyze/confirm', {
-                method: 'post',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    type,
-                    recording
-                })
-            }).catch(console.alert);
-        }
-    </script>
-</body>
-</html>
+        fetch("/analyze/confirm", {
+            method: "post",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                type,
+                recording,
+            }),
+        }).catch(console.error);
+    }
+</script>
+{% endblock %}

@@ -2,6 +2,8 @@ var audiosCache = {};
 var audiosPosition = {};
 var currentAudio;
 var stopTimer;
+var playbackInterval;
+var currentPlaybackLine;
 
 
 function play(event, recording) {
@@ -12,9 +14,13 @@ function play(event, recording) {
 
     if (currentAudio != null) {
         currentAudio.pause();
+        hidePlaybackLine();
     }
     if (stopTimer) {
         clearTimeout(stopTimer);
+    }
+    if (playbackInterval) {
+        clearInterval(playbackInterval);
     }
     
     if (audiosCache[recording] == null) {
@@ -22,11 +28,42 @@ function play(event, recording) {
     }
 
     currentAudio = audiosCache[recording];
+    
+    // Show playback line at clicked position
+    var recordingCard = event.target.closest('.recording');
+    currentPlaybackLine = recordingCard.querySelector('.playback-line');
+    if (currentPlaybackLine) {
+        currentPlaybackLine.style.left = (percentage * 100) + '%';
+        currentPlaybackLine.classList.add('active');
+    }
+    
     currentAudio.play().then(function() {
         currentAudio.currentTime = currentAudio.duration * percentage;
         audiosPosition[recording] = currentAudio.currentTime;
-        stopTimer = setTimeout(() => audiosCache[recording].pause(), 2000);
+        
+        // Update playback line position while playing
+        playbackInterval = setInterval(function() {
+            if (currentAudio && !currentAudio.paused) {
+                var progress = currentAudio.currentTime / currentAudio.duration;
+                if (currentPlaybackLine) {
+                    currentPlaybackLine.style.left = (progress * 100) + '%';
+                }
+            }
+        }, 50);
+        
+        stopTimer = setTimeout(function() {
+            audiosCache[recording].pause();
+            clearInterval(playbackInterval);
+            hidePlaybackLine();
+        }, 2000);
     }).catch(function(){
         console.error("Audio error");
     });
+}
+
+function hidePlaybackLine() {
+    if (currentPlaybackLine) {
+        currentPlaybackLine.classList.remove('active');
+    }
+    currentPlaybackLine = null;
 }

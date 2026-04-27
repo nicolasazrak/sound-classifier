@@ -95,6 +95,7 @@ class RealTimeClassifier:
             input_device=config.INPUT_DEVICE,
             recording_duration=2,
             callback=self.analyze,
+            sample_rate=config.SAMPLE_RATE,
         )
         recorder.run()
 
